@@ -12,6 +12,14 @@ if RUBY_VERSION < '1.8.7'
   end
 end
 
+unless 1.respond_to?(:ord)
+  class Numeric
+    def ord
+      to_i
+    end
+  end
+end
+
 module OpenPGP
   require 'openpgp/util'
 

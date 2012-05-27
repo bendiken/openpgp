@@ -86,6 +86,35 @@ module OpenPGP
       block.call(self) if block_given?
     end
 
+    def signature_and_data(index=0)
+      msg = self
+      msg = msg.first while msg.first.is_a?(OpenPGP::Packet::CompressedData)
+      signature_packet = data_packet = nil
+      i = 0
+      msg.each { |packet|
+        if packet.is_a?(OpenPGP::Packet::Signature)
+          signature_packet = packet if i == index
+          i += 1
+        elsif packet.is_a?(OpenPGP::Packet::LiteralData)
+          data_packet = packet
+        end
+        break if signature_packet && data_packet
+      }
+      [signature_packet, data_packet]
+    end
+
+    ##
+    # @param  verifiers a Hash of callables formatted like {'RSA' => {'SHA256' => callable}} that take two parameters: message and signature
+    # @param  index signature number to verify (if more than one)
+    def verify(verifiers, index=0)
+      signature_packet, data_packet = signature_and_data(index)
+      return nil unless signature_packet && data_packet # No signature or no data
+      verifier = verifiers[signature_packet.key_algorithm_name][signature_packet.hash_algorithm_name]
+      return nil unless verifier # No verifier
+      data_packet.normalize
+      verifier.call(data_packet.data + signature_packet.trailer, signature_packet.fields)
+    end
+
     ##
     # @yield  [packet]
     # @yieldparam [Packet] packet
@@ -124,11 +153,7 @@ module OpenPGP
     def to_s
       Buffer.write do |buffer|
         packets.each do |packet|
-          if body = packet.body
-            buffer.write_byte(packet.class.tag | 0xC0)
-            buffer.write_byte(body.size)
-            buffer.write_bytes(body)
-          end
+          buffer.write_bytes(packet.to_s)
         end
       end
     end

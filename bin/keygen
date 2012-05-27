@@ -1,0 +1,17 @@
+#!/usr/bin/ruby
+$:.unshift(File.expand_path(File.join(File.dirname(__FILE__), '..', 'lib')))
+require 'openpgp'
+
+nkey = OpenSSL::PKey::RSA.new(1024)
+
+nkey = OpenPGP::Packet::SecretKey.new(:key => nkey.params.merge({
+	:u => OpenPGP.egcd(nkey.params['p'].to_i, nkey.params['q'].to_i)
+}).inject({}) {|c, (k, v)|
+	c.merge!({k.intern => OpenPGP.bn2bin(v.to_i)})
+}, :algorithm => OpenPGP::Algorithm::Asymmetric::RSA, :version => 4, :timestamp => Time.now.to_i)
+
+uid = OpenPGP::Packet::UserID.new(:name => 'Test', :email => 'test@example.com')
+
+m = OpenPGP::Engine::OpenSSL::RSA.new(nkey).sign_key_userid([nkey, uid])
+
+print m.to_s

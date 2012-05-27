@@ -64,6 +64,53 @@ module OpenPGP
   # @return [Integer]
   # @see    http://tools.ietf.org/html/rfc4880#section-3.2
   def self.bitlength(data)
-    data.empty? ? 0 : (data.size - 1) * 8 + (Math.log(data[0].ord) / Math.log(2)).floor + 1
+    data = data.split(//)
+    while (f = data.shift) == '\0'; end
+    return 0 unless f
+    Math.log(f.ord, 2).floor + 1 + (data.length*8)
   end
+
+  ##
+  # Returns the network-byte-order representation of n
+  # @param [Numeric] n
+  # @return [String]
+  def self.bn2bin(n)
+    raise RangeError.new('Cannot convert negative number') if n < 0
+    bytes = n.size
+
+    # Mask off any leading 0 bytes
+    mask = 0xFF << (8 * bytes - 1)
+    while (mask & n) == 0
+      mask >>= 8
+      bytes -= 1
+    end
+
+    result = []
+    bits_left = n
+    until bits_left == 0
+      result << (bits_left & 0xFF).chr
+      bits_left >>= 8
+    end
+    result.reverse.join
+  end
+
+  ##
+  # Returns the multiplicative inverse of b, mod m
+  # @param [Numeric] b
+  # @param [Numeric] m
+  # @return [Numeric]
+  def self.egcd(b,m,recLevel=0)
+    if b % m == 0
+      [0,1]
+    else
+      tmpVal = egcd(m, b % m, recLevel+1)
+      tmpVal2 = [tmpVal[1], tmpVal[0]-tmpVal[1] * ((b/m).to_i)]
+      if recLevel == 0
+        tmpVal2[0] % m
+      else
+        tmpVal2
+      end
+    end
+  end
+
 end

@@ -102,6 +102,7 @@ Contributors
 ------------
 
 * [Kévin Lacointe](mailto:kevinlacointe@gmail.com) - <http://github.com/klacointe>
+* [Stephen Paul Weber](mailto:singpolyma@singpolyma.net) - <https://singpolyma.net>
 
 Contributing
 ------------
