@@ -1,3 +1,48 @@
-#!/usr/bin/env ruby -rubygems
+#!/usr/bin/env ruby
+
+require 'rubygems'
+
 $:.unshift(File.expand_path(File.join(File.dirname(__FILE__), '..', 'lib')))
 require 'openpgp'
+require 'optparse'
+
+options = {}
+OptionParser.new do |opts|
+  opts.banner = "Usage: openpgp [options] FILE"
+
+  opts.on("-a", "--armor", "ASCII armor") do
+    options[:armor] = true
+  end
+
+  opts.on_tail("-h", "--help", "Show this message") do
+    puts opts
+    exit
+  end
+end.parse!
+
+
+input_file = ARGV.shift
+
+if input_file.nil?
+  puts "missing FILE"
+  exit
+end
+
+input = File.read(input_file)
+
+if options[:armor]
+  input = OpenPGP.dearmor(input)
+end
+
+msg = OpenPGP::Message.parse(input)
+
+puts "message:"
+msg.each do |packet|
+  puts "  #{packet.class.name} size=#{packet.size rescue '?'}"
+  case packet.class.name
+  when "OpenPGP::Packet"
+    puts "    ?"
+  else
+    puts "    #{packet.to_s}"
+  end
+end

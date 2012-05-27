@@ -223,6 +223,11 @@ module OpenPGP
         buffer.write_byte(algorithm.to_i)
         buffer.write_s2k(s2k)
       end
+
+      def to_s
+        salt = s2k.salt.unpack('H*')
+        ":symkey enc packet: version #{version}, cipher #{algorithm}, hash #{s2k.algorithm}, salt #{salt}, count #{s2k.count}"
+      end
     end
 
     ##
@@ -348,6 +353,10 @@ module OpenPGP
 
       def write_body(buffer)
         buffer.write(data)
+      end
+
+      def to_s
+        ":encrypted data packet:"
       end
     end
 

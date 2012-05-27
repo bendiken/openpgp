@@ -185,7 +185,7 @@ module OpenPGP
       end
 
       # @return [Integer]
-      attr_reader :count
+      attr_accessor :count
 
       ##
       # @param  [String, #to_s]          passphrase
@@ -221,16 +221,16 @@ module OpenPGP
         end
       end
 
+      ##
+      # @param  [Integer] count
+      # @return [Integer]
+      def decode_count(count)
+        (16 + (count & 15)) << ((count >> 4) + EXPBIAS)
+      end
+
       protected
 
         EXPBIAS = 6
-
-        ##
-        # @param  [Integer] count
-        # @return [Integer]
-        def decode_count(count)
-          (16 + (count & 15)) << ((count >> 4) + EXPBIAS)
-        end
 
         ##
         # @param  [Integer] iterations
