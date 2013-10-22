@@ -21,7 +21,7 @@ module OpenPGP
     #
     # @return [Integer]
     def self.tag
-      @@tags.index(self)
+      @@tags.key(self)
     end
 
     ##
