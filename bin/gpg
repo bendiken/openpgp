@@ -1,0 +1,20 @@
+#!/usr/bin/env ruby
+$:.unshift(File.expand_path(File.join(File.dirname(__FILE__), '..', 'lib')))
+
+require 'openpgp'
+require 'openpgp/client/gnupg'
+require 'optparse'
+
+client = OpenPGP::Client::GnuPG.new
+
+command = :help
+options = {}
+optparser = OptionParser.new do |opts|
+  client.methods.each do |meth|
+    opts.on("--" + meth.to_s.gsub("_", "-")) do
+      command = meth
+    end
+  end
+end.parse!
+
+client.method(command).call(*ARGV)
